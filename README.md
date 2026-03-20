@@ -2,7 +2,7 @@
 
 **Defend what matters.**
 
-Two AI agents battle over a vulnerable Flask app in real-time. **Attacker** finds and exploits security vulnerabilities. **Defender** patches them. Watch it happen live in a dark-themed dashboard with streaming AI reasoning.
+Two AI agents battle over a vulnerable Flask app in real-time. **The Attacker** finds and exploits security vulnerabilities. **The Defender** patches them. Watch it happen live in a dark-themed dashboard with streaming AI reasoning.
 
 ![Battle Dashboard](https://img.shields.io/badge/status-battle--ready-brightgreen)
 
