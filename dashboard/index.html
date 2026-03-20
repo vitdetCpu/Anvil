@@ -21,6 +21,7 @@
       <span id="roundPill" class="status-pill pill-idle">READY</span>
       <span id="statusPill" class="status-pill pill-idle">IDLE</span>
       <button id="viewResultsBtn" class="results-btn" style="display:none" onclick="overlay.classList.add('show')">VIEW RESULTS</button>
+      <button id="resetBtn" class="results-btn" style="display:none" onclick="resetBattle()">RESTART</button>
     </div>
   </header>
 
@@ -206,6 +207,7 @@
         hardenedScore.textContent = '0';
         document.getElementById('winnerText').textContent = '';
         document.getElementById('viewResultsBtn').style.display = 'none';
+        document.getElementById('resetBtn').style.display = 'none';
         var rpt = document.getElementById('battleReport');
         while (rpt.firstChild) rpt.removeChild(rpt.firstChild);
         while (redPanel.firstChild) redPanel.removeChild(redPanel.firstChild);
@@ -353,6 +355,7 @@
           buildBattleReport(event.rounds || [], event.recommendations || [], event.remaining_risks || []);
           overlay.classList.add('show');
           document.getElementById('viewResultsBtn').style.display = 'inline-block';
+          document.getElementById('resetBtn').style.display = 'inline-block';
           if (eventSource) {
             eventSource.close();
           }
@@ -865,6 +868,8 @@
       if (state.status === 'complete' || state.status === 'battle_complete') {
         statusPill.textContent = 'COMPLETE';
         statusPill.className = 'status-pill pill-green';
+        document.getElementById('viewResultsBtn').style.display = 'inline-block';
+        document.getElementById('resetBtn').style.display = 'inline-block';
         if (state.scores) {
           showWinner(state.scores.defended_pct || 0);
         }
