@@ -67,7 +67,7 @@ Red analyzes source -> crafts curl attack
 
 ```bash
 # Clone and enter the project
-git clone <repo-url> && cd Anvil
+git clone https://github.com/vitdetCpu/Anvil.git && cd Anvil
 
 # Set your API key
 cp .env.example .env
