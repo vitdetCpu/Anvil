@@ -1,0 +1,899 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+/* ============================================================
+   CSS Custom Properties (Design Tokens)
+   ============================================================ */
+:root {
+  /* Backgrounds */
+  --bg: #020617;
+  --panel: #0F172A;
+  --border: #1E293B;
+
+  /* Text */
+  --text: #F8FAFC;
+  --dim: #64748B;
+
+  /* Red */
+  --red: #EF4444;
+  --red-bg: #7F1D1D;
+  --red-light: #FCA5A5;
+
+  /* Blue */
+  --blue: #3B82F6;
+  --blue-bg: #1E3A5F;
+  --blue-light: #93C5FD;
+
+  /* Green */
+  --green: #22C55E;
+  --green-bg: #14532D;
+  --green-light: #86EFAC;
+
+  /* Yellow */
+  --yellow: #EAB308;
+
+  /* Amber (for badge-error) */
+  --amber-bg: #78350F;
+  --amber-text: #FDE68A;
+}
+
+/* ============================================================
+   Reset & Base
+   ============================================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ============================================================
+   Header
+   ============================================================ */
+.header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.header-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--text);
+}
+
+.header-title .red {
+  color: var(--red);
+}
+
+.header-title .blue {
+  color: var(--blue);
+}
+
+.header-title .dim {
+  color: var(--dim);
+}
+
+.header-pills {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ============================================================
+   Status Pills
+   ============================================================ */
+.status-pill {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 99px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.pill-idle {
+  background: var(--border);
+  color: var(--dim);
+}
+
+.pill-red {
+  background: var(--red-bg);
+  color: var(--red-light);
+}
+
+.pill-blue {
+  background: var(--blue-bg);
+  color: var(--blue-light);
+}
+
+.pill-green {
+  background: var(--green-bg);
+  color: var(--green-light);
+}
+
+/* ============================================================
+   Scoreboard
+   ============================================================ */
+.scoreboard {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  padding: 16px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.score-item {
+  text-align: center;
+}
+
+.score-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text);
+  display: block;
+}
+
+.score-num.red {
+  color: var(--red);
+}
+
+.score-num.blue {
+  color: var(--blue);
+}
+
+.score-num.green {
+  color: var(--green);
+}
+
+.score-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--dim);
+  display: block;
+  margin-top: 2px;
+}
+
+/* ============================================================
+   Timeline
+   ============================================================ */
+.timeline {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+}
+
+.timeline-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.dot-pending {
+  background: var(--border);
+  color: var(--dim);
+  border: 2px solid var(--border);
+}
+
+.dot-complete {
+  background: var(--green-bg);
+  color: var(--green-light);
+  border: 2px solid var(--green);
+}
+
+.dot-active {
+  background: var(--red-bg);
+  color: var(--red-light);
+  border: 2px solid var(--yellow);
+  box-shadow: 0 0 0 3px var(--yellow), 0 0 12px var(--yellow);
+  animation: pulse 1s infinite;
+}
+
+/* ============================================================
+   Code Input (pre-battle)
+   ============================================================ */
+.code-input-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 16px 24px;
+}
+
+.code-input-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.code-input-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--green);
+}
+
+.code-input-hint {
+  font-size: 12px;
+  color: var(--dim);
+}
+
+.code-input {
+  width: 100%;
+  min-height: 300px;
+  max-height: 500px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  resize: vertical;
+  outline: none;
+  tab-size: 4;
+}
+
+.code-input:focus {
+  border-color: var(--green);
+}
+
+/* ============================================================
+   Code Viewer (live, during battle)
+   ============================================================ */
+.code-viewer-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px 16px;
+}
+
+.panel-code {
+  border-left: 4px solid var(--green);
+  max-height: 350px;
+}
+
+.agent-name-code {
+  color: var(--green);
+  font-weight: 700;
+}
+
+.code-viewer {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  line-height: 1.7;
+  white-space: pre;
+  overflow: auto;
+  color: var(--text);
+  background: var(--bg);
+  border-radius: 6px;
+  padding: 12px;
+  margin: 0;
+}
+
+/* ============================================================
+   Battle Grid
+   ============================================================ */
+.battle-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 16px 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ============================================================
+   Panel
+   ============================================================ */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-red {
+  border-left: 4px solid var(--red);
+}
+
+.panel-blue {
+  border-left: 4px solid var(--blue);
+}
+
+.panel-header {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--dim);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.agent-name-red {
+  color: var(--red);
+  font-weight: 700;
+}
+
+.agent-name-blue {
+  color: var(--blue);
+  font-weight: 700;
+}
+
+.panel-content {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.panel-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.panel-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.panel-content::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+/* ============================================================
+   Log Entry
+   ============================================================ */
+.log-entry {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.log-entry:last-child {
+  border-bottom: none;
+}
+
+/* ============================================================
+   Round Badge
+   ============================================================ */
+.round-badge {
+  display: inline-block;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--dim);
+  margin-right: 6px;
+}
+
+/* ============================================================
+   Vuln Type
+   ============================================================ */
+.vuln-type {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+.vuln-type.red {
+  color: var(--red);
+}
+
+.vuln-type.blue {
+  color: var(--blue);
+}
+
+/* ============================================================
+   Log Explanation
+   ============================================================ */
+.log-explanation {
+  font-size: 13px;
+  color: var(--dim);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   Code Block
+   ============================================================ */
+.code-block {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  line-height: 1.7;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin-top: 8px;
+  color: var(--text);
+}
+
+/* ============================================================
+   Judge Evidence
+   ============================================================ */
+.judge-evidence {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-style: italic;
+  color: var(--yellow);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   Thinking Blocks (collapsible)
+   ============================================================ */
+.thinking-entry {
+  border-bottom: 1px solid var(--border);
+}
+
+.thinking-summary {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--dim);
+  list-style: none;
+  user-select: none;
+}
+
+.thinking-summary::-webkit-details-marker {
+  display: none;
+}
+
+.thinking-summary::before {
+  content: '\25B6';
+  font-size: 8px;
+  transition: transform 0.2s ease;
+}
+
+details[open] > .thinking-summary::before {
+  transform: rotate(90deg);
+}
+
+.thinking-icon {
+  font-size: 12px;
+}
+
+.thinking-label {
+  font-size: 11px;
+}
+
+.thinking-label.red {
+  color: var(--red-light);
+}
+
+.thinking-label.blue {
+  color: var(--blue-light);
+}
+
+.thinking-label.dim {
+  color: var(--dim);
+}
+
+.thinking-content {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--dim);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+/* ============================================================
+   Diff Colors
+   ============================================================ */
+.diff-add {
+  color: var(--green);
+}
+
+.diff-del {
+  color: var(--red);
+}
+
+/* ============================================================
+   Badge
+   ============================================================ */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-left: 4px;
+}
+
+.badge-success {
+  background: var(--red-bg);
+  color: var(--red-light);
+}
+
+.badge-blocked {
+  background: var(--green-bg);
+  color: var(--green-light);
+}
+
+.badge-applied {
+  background: var(--blue-bg);
+  color: var(--blue-light);
+}
+
+.badge-error {
+  background: var(--amber-bg);
+  color: var(--amber-text);
+}
+
+/* ============================================================
+   Spinner
+   ============================================================ */
+.spinner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  color: var(--yellow);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.spinner-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--yellow);
+  animation: pulse 1s infinite;
+  opacity: 0.3;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   Start Button / Container
+   ============================================================ */
+.start-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.start-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 14px 48px;
+  border: 2px solid var(--green);
+  background: transparent;
+  color: var(--green);
+  border-radius: 8px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.start-btn:hover:not(:disabled) {
+  background: var(--green);
+  color: var(--bg);
+}
+
+.start-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   Victory Overlay
+   ============================================================ */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.9);
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.overlay.show {
+  display: flex;
+}
+
+.overlay-content {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 40px;
+  text-align: center;
+  max-width: 500px;
+  width: 90%;
+}
+
+.overlay-content h2 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+
+.overlay-content h3 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.overlay-content p {
+  font-size: 15px;
+  color: var(--dim);
+  line-height: 1.6;
+}
+
+/* ============================================================
+   View Results Button
+   ============================================================ */
+.results-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 14px;
+  border: 1px solid var(--green);
+  background: transparent;
+  color: var(--green);
+  border-radius: 99px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.results-btn:hover {
+  background: var(--green);
+  color: var(--bg);
+}
+
+/* ============================================================
+   Overlay Close Button
+   ============================================================ */
+.overlay-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: var(--dim);
+  font-size: 28px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px 8px;
+  transition: color 0.2s ease;
+}
+
+.overlay-close:hover {
+  color: var(--text);
+}
+
+/* ============================================================
+   Battle Report (end-screen overlay)
+   ============================================================ */
+.overlay-content-wide {
+  max-width: 700px;
+  text-align: left;
+}
+
+.overlay-content-wide h2,
+.overlay-content-wide h3 {
+  text-align: center;
+}
+
+.overlay-content-wide > p {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.battle-report {
+  margin-top: 16px;
+  max-height: 400px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.report-section {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.report-section:last-child {
+  border-bottom: none;
+}
+
+.report-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--dim);
+  margin-bottom: 10px;
+}
+
+.report-title-red {
+  color: var(--red);
+}
+
+.report-title-green {
+  color: var(--green);
+}
+
+.report-round {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+.report-round-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--dim);
+  min-width: 28px;
+}
+
+.report-vuln {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.report-arrow {
+  color: var(--dim);
+  font-size: 14px;
+}
+
+.report-fix {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--blue-light);
+}
+
+.report-list {
+  list-style: none;
+  padding: 0;
+}
+
+.report-list li {
+  position: relative;
+  padding: 4px 0 4px 16px;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.report-list li::before {
+  content: '\2022';
+  position: absolute;
+  left: 0;
+  color: var(--dim);
+}
+
+/* ============================================================
+   Animations
+   ============================================================ */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ============================================================
+   Responsive Breakpoints
+   ============================================================ */
+@media (max-width: 900px) {
+  .battle-grid {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+
+  .scoreboard {
+    gap: 16px;
+  }
+
+  .score-num {
+    font-size: 24px;
+  }
+
+  .header-title {
+    font-size: 16px;
+  }
+}

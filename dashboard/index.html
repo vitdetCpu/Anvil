@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Red vs Blue — Live App Hardening</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+
+  <!-- ============================================================
+       Header
+       ============================================================ -->
+  <header class="header">
+    <div class="header-title">
+      <span class="red">RED</span>
+      <span class="dim"> vs </span>
+      <span class="blue">BLUE</span>
+    </div>
+    <div class="header-pills">
+      <span id="roundPill" class="status-pill pill-idle">READY</span>
+      <span id="statusPill" class="status-pill pill-idle">IDLE</span>
+      <button id="viewResultsBtn" class="results-btn" style="display:none" onclick="overlay.classList.add('show')">VIEW RESULTS</button>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       Scoreboard
+       ============================================================ -->
+  <div class="scoreboard">
+    <div class="score-item">
+      <span id="redScore" class="score-num red">0</span>
+      <span class="score-label">Exploited</span>
+    </div>
+    <div class="score-item">
+      <span id="blueScore" class="score-num blue">0</span>
+      <span class="score-label">Defended</span>
+    </div>
+    <div class="score-item">
+      <span id="hardenedScore" class="score-num green">0%</span>
+      <span class="score-label">Defended</span>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       Timeline
+       ============================================================ -->
+  <div class="timeline" id="timeline"></div>
+
+  <!-- ============================================================
+       Code Input (before battle starts)
+       ============================================================ -->
+  <div class="code-input-container" id="codeInputContainer">
+    <div class="code-input-header">
+      <span class="code-input-label">TARGET CODEBASE</span>
+      <span class="code-input-hint">Paste your Flask app below, or use the default vulnerable app</span>
+    </div>
+    <textarea id="codeInput" class="code-input" spellcheck="false" placeholder="Loading default app..."></textarea>
+    <div class="start-container">
+      <button id="startBtn" class="start-btn" onclick="startBattle()">START BATTLE</button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       Live Code Viewer (during/after battle)
+       ============================================================ -->
+  <div class="code-viewer-container" id="codeViewerContainer" style="display:none;">
+    <div class="panel panel-code">
+      <div class="panel-header">
+        <span class="agent-name-code">LIVE CODEBASE</span>
+        <span>target_app/app.py</span>
+      </div>
+      <pre class="panel-content code-viewer" id="codeViewer"></pre>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       Battle Grid — Two Panels
+       ============================================================ -->
+  <div class="battle-grid">
+    <!-- Red Panel: Attack Log -->
+    <div class="panel panel-red">
+      <div class="panel-header">
+        <span class="agent-name-red">RED AGENT</span>
+        <span>Attack Log</span>
+      </div>
+      <div class="panel-content" id="redPanel"></div>
+    </div>
+
+    <!-- Blue Panel: Patch Log -->
+    <div class="panel panel-blue">
+      <div class="panel-header">
+        <span class="agent-name-blue">BLUE AGENT</span>
+        <span>Patch Log</span>
+      </div>
+      <div class="panel-content" id="bluePanel"></div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       Battle Complete Overlay
+       ============================================================ -->
+  <div class="overlay" id="overlay">
+    <div class="overlay-content overlay-content-wide">
+      <button class="overlay-close" onclick="overlay.classList.remove('show')">&times;</button>
+      <h2>BATTLE COMPLETE</h2>
+      <h3 id="winnerText"></h3>
+      <p id="battleSummary"></p>
+      <div id="battleReport" class="battle-report"></div>
+      <button class="start-btn" style="margin-top:20px" onclick="resetBattle()">NEW BATTLE</button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       JavaScript
+       ============================================================ -->
+  <script>
+    // ----------------------------------------------------------
+    // DOM References
+    // ----------------------------------------------------------
+    var redPanel            = document.getElementById('redPanel');
+    var bluePanel           = document.getElementById('bluePanel');
+    var redScore            = document.getElementById('redScore');
+    var blueScore           = document.getElementById('blueScore');
+    var hardenedScore       = document.getElementById('hardenedScore');
+    var roundPill           = document.getElementById('roundPill');
+    var statusPill          = document.getElementById('statusPill');
+    var timeline            = document.getElementById('timeline');
+    var startBtn            = document.getElementById('startBtn');
+    var overlay             = document.getElementById('overlay');
+    var battleSummary       = document.getElementById('battleSummary');
+    var codeInput           = document.getElementById('codeInput');
+    var codeInputContainer  = document.getElementById('codeInputContainer');
+    var codeViewer          = document.getElementById('codeViewer');
+    var codeViewerContainer = document.getElementById('codeViewerContainer');
+
+    // ----------------------------------------------------------
+    // State
+    // ----------------------------------------------------------
+    var currentRound = 0;
+    var totalRounds  = 5;
+    var eventSource  = null;
+
+    // ----------------------------------------------------------
+    // Load default source on page load
+    // ----------------------------------------------------------
+    function loadDefaultSource() {
+      fetch('/source')
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.source) {
+            codeInput.value = data.source;
+          }
+        })
+        .catch(function() {});
+    }
+
+    // ----------------------------------------------------------
+    // startBattle
+    // ----------------------------------------------------------
+    function startBattle() {
+      startBtn.disabled = true;
+      startBtn.textContent = 'BATTLE IN PROGRESS';
+
+      var code = codeInput.value.trim();
+      var body = code ? JSON.stringify({ code: code }) : '{}';
+
+      fetch('/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: body
+      })
+        .then(function(res) {
+          if (!res.ok) {
+            console.error('Failed to start battle:', res.status);
+          }
+        })
+        .catch(function(err) {
+          console.error('Error starting battle:', err);
+        });
+
+      // Switch from input to viewer
+      codeInputContainer.style.display = 'none';
+      codeViewerContainer.style.display = 'block';
+      codeViewer.textContent = code || codeInput.value;
+
+      connectSSE();
+    }
+
+    // ----------------------------------------------------------
+    // resetBattle
+    // ----------------------------------------------------------
+    function resetBattle() {
+      overlay.classList.remove('show');
+      codeInputContainer.style.display = 'block';
+      codeViewerContainer.style.display = 'none';
+      startBtn.disabled = false;
+      startBtn.textContent = 'START BATTLE';
+      roundPill.textContent = 'READY';
+      roundPill.className = 'status-pill pill-idle';
+      statusPill.textContent = 'IDLE';
+      statusPill.className = 'status-pill pill-idle';
+      redScore.textContent = '0';
+      blueScore.textContent = '0';
+      hardenedScore.textContent = '0';
+      document.getElementById('winnerText').textContent = '';
+      document.getElementById('viewResultsBtn').style.display = 'none';
+      var rpt = document.getElementById('battleReport');
+      while (rpt.firstChild) rpt.removeChild(rpt.firstChild);
+      while (redPanel.firstChild) redPanel.removeChild(redPanel.firstChild);
+      while (bluePanel.firstChild) bluePanel.removeChild(bluePanel.firstChild);
+      while (timeline.firstChild) timeline.removeChild(timeline.firstChild);
+      currentRound = 0;
+      if (eventSource) { eventSource.close(); eventSource = null; }
+      loadDefaultSource();
+    }
+
+    // ----------------------------------------------------------
+    // connectSSE
+    // ----------------------------------------------------------
+    function connectSSE() {
+      if (eventSource) {
+        eventSource.close();
+      }
+
+      eventSource = new EventSource('/events');
+
+      eventSource.onmessage = function(e) {
+        try {
+          var event = JSON.parse(e.data);
+          handleEvent(event);
+        } catch (err) {
+          console.error('Failed to parse SSE event:', err, e.data);
+        }
+      };
+
+      eventSource.onerror = function() {
+        console.warn('SSE connection error. Retrying via /state...');
+        setTimeout(function() {
+          fetch('/state')
+            .then(function(res) { return res.json(); })
+            .then(function(state) { rebuildFromState(state); })
+            .catch(function(err) {
+              console.error('Failed to fetch /state:', err);
+            });
+        }, 1000);
+      };
+    }
+
+    // ----------------------------------------------------------
+    // handleEvent — central dispatcher
+    // ----------------------------------------------------------
+    function handleEvent(event) {
+      switch (event.type) {
+        case 'round_start':
+          currentRound = event.round || event.round_number || currentRound + 1;
+          if (event.total) {
+            totalRounds = event.total;
+          }
+          roundPill.textContent = 'ROUND ' + currentRound + '/' + totalRounds;
+          roundPill.className = 'status-pill pill-red';
+          updateTimeline();
+          // Update code viewer with current source
+          if (event.source) {
+            codeViewer.textContent = event.source;
+          }
+          break;
+
+        case 'red_thinking':
+          statusPill.textContent = 'RED THINKING';
+          statusPill.className = 'status-pill pill-red';
+          showSpinner(redPanel, event.message || 'Red agent is thinking...');
+          break;
+
+        case 'red_thinking_delta':
+          removeSpinner(redPanel);
+          appendThinkingDelta(redPanel, 'red', event.delta || '');
+          break;
+
+        case 'red_generating':
+          showSpinner(redPanel, event.message || 'Generating vulnerability exploit...');
+          statusPill.textContent = 'RED GENERATING';
+          statusPill.className = 'status-pill pill-red';
+          break;
+
+        case 'red_attack':
+          removeSpinner(redPanel);
+          addRedEntry(event);
+          break;
+
+        case 'attack_result':
+          updateLastRedResult(event);
+          break;
+
+        case 'blue_thinking':
+          statusPill.textContent = 'BLUE THINKING';
+          statusPill.className = 'status-pill pill-blue';
+          showSpinner(bluePanel, event.message || 'Blue agent is thinking...');
+          break;
+
+        case 'blue_thinking_delta':
+          removeSpinner(bluePanel);
+          appendThinkingDelta(bluePanel, 'blue', event.delta || '');
+          break;
+
+        case 'blue_generating':
+          showSpinner(bluePanel, event.message || 'Generating fix...');
+          statusPill.textContent = 'BLUE GENERATING';
+          statusPill.className = 'status-pill pill-blue';
+          break;
+
+        case 'blue_patch':
+          removeSpinner(bluePanel);
+          addBlueEntry(event);
+          break;
+
+        case 'server_restart':
+          statusPill.textContent = 'RESTARTING';
+          statusPill.className = 'status-pill pill-idle';
+          break;
+
+        case 'server_ready':
+          statusPill.textContent = 'SERVER UP';
+          statusPill.className = 'status-pill pill-green';
+          // Fetch updated source after restart
+          fetch('/source')
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+              if (data.source) codeViewer.textContent = data.source;
+            })
+            .catch(function() {});
+          break;
+
+        case 'round_complete':
+          if (event.scores) {
+            updateScores(event.scores);
+          }
+          updateTimelineComplete();
+          break;
+
+        case 'battle_complete':
+          statusPill.textContent = 'COMPLETE';
+          statusPill.className = 'status-pill pill-green';
+          var scores = event.final_scores || event.scores;
+          if (scores) {
+            updateScores(scores);
+            showWinner(scores.defended_pct || 0);
+          }
+          var summaryText = event.summary || event.message || 'The battle has ended.';
+          battleSummary.textContent = summaryText;
+          buildBattleReport(event.rounds || [], event.recommendations || [], event.remaining_risks || []);
+          overlay.classList.add('show');
+          document.getElementById('viewResultsBtn').style.display = 'inline-block';
+          if (eventSource) {
+            eventSource.close();
+          }
+          fetch('/source')
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+              if (data.source) codeViewer.textContent = data.source;
+            })
+            .catch(function() {});
+          break;
+
+        case 'error':
+          addErrorEntry(event);
+          break;
+
+        default:
+          console.log('Unknown event type:', event.type, event);
+      }
+    }
+
+    // ----------------------------------------------------------
+    // showSpinner
+    // ----------------------------------------------------------
+    function showSpinner(panel, message) {
+      removeSpinner(panel);
+
+      var spinner = document.createElement('div');
+      spinner.className = 'spinner';
+      spinner.id = 'active-spinner';
+
+      var dot = document.createElement('div');
+      dot.className = 'spinner-dot';
+
+      var text = document.createElement('span');
+      text.textContent = message;
+
+      spinner.appendChild(dot);
+      spinner.appendChild(text);
+      panel.appendChild(spinner);
+
+      panel.scrollTop = panel.scrollHeight;
+    }
+
+    // ----------------------------------------------------------
+    // removeSpinner
+    // ----------------------------------------------------------
+    function removeSpinner(panel) {
+      var existing = panel.querySelector('#active-spinner');
+      if (existing) {
+        existing.parentNode.removeChild(existing);
+      }
+    }
+
+    // ----------------------------------------------------------
+    // appendThinkingDelta — streaming thinking, creates on first delta
+    // ----------------------------------------------------------
+    function appendThinkingDelta(panel, agent, delta) {
+      if (!delta) return;
+
+      var entryId = 'thinking-' + agent + '-' + currentRound;
+      var entry = document.getElementById(entryId);
+
+      if (!entry) {
+        // Create the thinking block on first delta
+        entry = document.createElement('div');
+        entry.className = 'log-entry thinking-entry';
+        entry.id = entryId;
+
+        var details = document.createElement('details');
+        details.open = true; // auto-open while streaming
+
+        var summary = document.createElement('summary');
+        summary.className = 'thinking-summary';
+
+        var icon = document.createElement('span');
+        icon.className = 'thinking-icon';
+        icon.textContent = '\u{1F9E0}';
+
+        var label = document.createElement('span');
+        if (agent === 'red') {
+          label.textContent = 'Red Agent\'s Reasoning';
+          label.className = 'thinking-label red';
+        } else {
+          label.textContent = 'Blue Agent\'s Reasoning';
+          label.className = 'thinking-label blue';
+        }
+
+        summary.appendChild(icon);
+        summary.appendChild(label);
+
+        var content = document.createElement('pre');
+        content.className = 'thinking-content';
+        content.id = entryId + '-content';
+
+        details.appendChild(summary);
+        details.appendChild(content);
+        entry.appendChild(details);
+
+        panel.appendChild(entry);
+      }
+
+      // Append delta text
+      var content = document.getElementById(entryId + '-content');
+      if (content) {
+        content.textContent += delta;
+        // Auto-scroll the thinking content
+        content.scrollTop = content.scrollHeight;
+      }
+      panel.scrollTop = panel.scrollHeight;
+    }
+
+    // ----------------------------------------------------------
+    // addRedEntry
+    // ----------------------------------------------------------
+    function addRedEntry(event) {
+      var entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.id = 'red-entry-' + currentRound;
+
+      var topRow = document.createElement('div');
+      topRow.style.marginBottom = '4px';
+
+      var badge = document.createElement('span');
+      badge.className = 'round-badge';
+      badge.textContent = 'R' + currentRound;
+
+      var vulnSpan = document.createElement('span');
+      vulnSpan.className = 'vuln-type red';
+      vulnSpan.textContent = event.vuln_type || event.vulnerability || 'UNKNOWN';
+
+      topRow.appendChild(badge);
+      topRow.appendChild(vulnSpan);
+
+      var explanation = document.createElement('p');
+      explanation.className = 'log-explanation';
+      explanation.textContent = event.explanation || event.description || '';
+
+      var code = document.createElement('pre');
+      code.className = 'code-block';
+      code.textContent = event.curl_cmd || event.command || event.payload || '';
+
+      entry.appendChild(topRow);
+      entry.appendChild(explanation);
+      entry.appendChild(code);
+
+      redPanel.appendChild(entry);
+      redPanel.scrollTop = redPanel.scrollHeight;
+    }
+
+    // ----------------------------------------------------------
+    // updateLastRedResult
+    // ----------------------------------------------------------
+    function updateLastRedResult(event) {
+      var round = event.round || currentRound;
+      var entry = document.getElementById('red-entry-' + round);
+      if (!entry) return;
+
+      var topRow = entry.querySelector('div');
+      if (!topRow) return;
+
+      var resultBadge = document.createElement('span');
+      var success = event.success || event.result === 'success' || event.exploited;
+
+      if (success) {
+        resultBadge.className = 'badge badge-success';
+        resultBadge.textContent = 'SUCCESS';
+      } else {
+        resultBadge.className = 'badge badge-blocked';
+        resultBadge.textContent = 'BLOCKED';
+      }
+
+      topRow.appendChild(resultBadge);
+
+      // Judge's evidence/reasoning
+      if (event.evidence) {
+        var evidence = document.createElement('p');
+        evidence.className = 'judge-evidence';
+        evidence.textContent = 'Judge: ' + event.evidence;
+        entry.appendChild(evidence);
+      }
+    }
+
+    // ----------------------------------------------------------
+    // addBlueEntry
+    // ----------------------------------------------------------
+    function addBlueEntry(event) {
+      var entry = document.createElement('div');
+      entry.className = 'log-entry';
+
+      var topRow = document.createElement('div');
+      topRow.style.marginBottom = '4px';
+
+      var badge = document.createElement('span');
+      badge.className = 'round-badge';
+      badge.textContent = 'R' + currentRound;
+
+      var vulnSpan = document.createElement('span');
+      vulnSpan.className = 'vuln-type blue';
+      vulnSpan.textContent = event.vuln_fixed || event.vulnerability || event.fix_type || 'PATCH';
+
+      var appliedBadge = document.createElement('span');
+      appliedBadge.className = 'badge badge-applied';
+      appliedBadge.textContent = 'APPLIED';
+
+      topRow.appendChild(badge);
+      topRow.appendChild(vulnSpan);
+      topRow.appendChild(appliedBadge);
+
+      var explanation = document.createElement('p');
+      explanation.className = 'log-explanation';
+      explanation.textContent = event.explanation || event.description || '';
+
+      var code = document.createElement('pre');
+      code.className = 'code-block';
+
+      if (event.diff) {
+        var fragment = formatDiffSafe(event.diff);
+        code.appendChild(fragment);
+      } else {
+        code.textContent = event.patch || '';
+      }
+
+      entry.appendChild(topRow);
+      entry.appendChild(explanation);
+      entry.appendChild(code);
+
+      bluePanel.appendChild(entry);
+      bluePanel.scrollTop = bluePanel.scrollHeight;
+    }
+
+    // ----------------------------------------------------------
+    // formatDiffSafe
+    // ----------------------------------------------------------
+    function formatDiffSafe(diffStr) {
+      var fragment = document.createDocumentFragment();
+      var lines = diffStr.split('\n');
+
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        var span = document.createElement('span');
+
+        if (line.startsWith('+') && !line.startsWith('+++')) {
+          span.className = 'diff-add';
+        } else if (line.startsWith('-') && !line.startsWith('---')) {
+          span.className = 'diff-del';
+        }
+
+        span.textContent = line;
+        fragment.appendChild(span);
+
+        if (i < lines.length - 1) {
+          fragment.appendChild(document.createTextNode('\n'));
+        }
+      }
+
+      return fragment;
+    }
+
+    // ----------------------------------------------------------
+    // addErrorEntry
+    // ----------------------------------------------------------
+    function addErrorEntry(event) {
+      var entry = document.createElement('div');
+      entry.className = 'log-entry';
+
+      var errorBadge = document.createElement('span');
+      errorBadge.className = 'badge badge-error';
+      errorBadge.textContent = 'ERROR R' + currentRound;
+
+      var msg = document.createElement('span');
+      msg.className = 'log-explanation';
+      msg.textContent = event.message || event.error || 'An unknown error occurred.';
+
+      entry.appendChild(errorBadge);
+      entry.appendChild(msg);
+
+      redPanel.appendChild(entry);
+      redPanel.scrollTop = redPanel.scrollHeight;
+    }
+
+    // ----------------------------------------------------------
+    // updateScores
+    // ----------------------------------------------------------
+    function updateScores(scores) {
+      if (scores === null || scores === undefined) return;
+
+      if (scores.red_exploited !== undefined && scores.red_exploited !== null) {
+        redScore.textContent = scores.red_exploited;
+      }
+      if (scores.blue_defended !== undefined && scores.blue_defended !== null) {
+        blueScore.textContent = scores.blue_defended;
+      }
+      if (scores.defended_pct !== undefined && scores.defended_pct !== null) {
+        hardenedScore.textContent = scores.defended_pct + '%';
+      }
+    }
+
+    // ----------------------------------------------------------
+    // showWinner
+    // ----------------------------------------------------------
+    function showWinner(hardenedPct) {
+      var el = document.getElementById('winnerText');
+      if (hardenedPct > 50) {
+        el.textContent = 'BLUE WINS';
+        el.style.color = 'var(--blue)';
+      } else {
+        el.textContent = 'RED WINS';
+        el.style.color = 'var(--red)';
+      }
+    }
+
+    // ----------------------------------------------------------
+    // buildBattleReport
+    // ----------------------------------------------------------
+    function buildBattleReport(rounds, recommendations, remainingRisks) {
+      var report = document.getElementById('battleReport');
+      while (report.firstChild) report.removeChild(report.firstChild);
+
+      if (rounds.length > 0) {
+        // --- Round-by-round breakdown ---
+        var roundsSection = document.createElement('div');
+        roundsSection.className = 'report-section';
+
+        var roundsTitle = document.createElement('h4');
+        roundsTitle.className = 'report-title';
+        roundsTitle.textContent = 'Round-by-Round Breakdown';
+        roundsSection.appendChild(roundsTitle);
+
+        for (var i = 0; i < rounds.length; i++) {
+          var r = rounds[i];
+          var row = document.createElement('div');
+          row.className = 'report-round';
+
+          var roundLabel = document.createElement('span');
+          roundLabel.className = 'report-round-label';
+          roundLabel.textContent = 'R' + r.round;
+
+          var vuln = document.createElement('span');
+          vuln.className = 'report-vuln';
+          vuln.textContent = r.red_attack ? r.red_attack.vulnerability_type : '?';
+
+          var result = document.createElement('span');
+          if (r.attack_success) {
+            result.className = 'badge badge-success';
+            result.textContent = 'EXPLOITED';
+          } else {
+            result.className = 'badge badge-blocked';
+            result.textContent = 'BLOCKED';
+          }
+
+          var fix = document.createElement('span');
+          fix.className = 'report-fix';
+          fix.textContent = r.blue_patch ? r.blue_patch.vuln_fixed || '' : '';
+
+          row.appendChild(roundLabel);
+          row.appendChild(vuln);
+          row.appendChild(result);
+          if (fix.textContent) {
+            var arrow = document.createElement('span');
+            arrow.className = 'report-arrow';
+            arrow.textContent = ' \u2192 ';
+            row.appendChild(arrow);
+            row.appendChild(fix);
+          }
+          roundsSection.appendChild(row);
+        }
+        report.appendChild(roundsSection);
+      }
+
+      // --- Remaining Risks ---
+      if (remainingRisks.length > 0) {
+        var risksSection = document.createElement('div');
+        risksSection.className = 'report-section';
+
+        var risksTitle = document.createElement('h4');
+        risksTitle.className = 'report-title report-title-red';
+        risksTitle.textContent = 'Remaining Risks';
+        risksSection.appendChild(risksTitle);
+
+        var risksList = document.createElement('ul');
+        risksList.className = 'report-list';
+        for (var j = 0; j < remainingRisks.length; j++) {
+          var li = document.createElement('li');
+          li.textContent = remainingRisks[j];
+          risksList.appendChild(li);
+        }
+        risksSection.appendChild(risksList);
+        report.appendChild(risksSection);
+      }
+
+      // --- Recommendations ---
+      if (recommendations.length > 0) {
+        var recSection = document.createElement('div');
+        recSection.className = 'report-section';
+
+        var recTitle = document.createElement('h4');
+        recTitle.className = 'report-title report-title-green';
+        recTitle.textContent = 'Security Recommendations';
+        recSection.appendChild(recTitle);
+
+        var recList = document.createElement('ul');
+        recList.className = 'report-list';
+        for (var k = 0; k < recommendations.length; k++) {
+          var li2 = document.createElement('li');
+          li2.textContent = recommendations[k];
+          recList.appendChild(li2);
+        }
+        recSection.appendChild(recList);
+        report.appendChild(recSection);
+      }
+    }
+
+    // ----------------------------------------------------------
+    // updateTimeline — ONE dot per round
+    // ----------------------------------------------------------
+    function updateTimeline() {
+      while (timeline.firstChild) {
+        timeline.removeChild(timeline.firstChild);
+      }
+
+      for (var r = 1; r <= totalRounds; r++) {
+        var dot = document.createElement('div');
+        dot.className = 'timeline-dot';
+        if (r < currentRound) {
+          dot.className += ' dot-complete';
+        } else if (r === currentRound) {
+          dot.className += ' dot-active';
+        } else {
+          dot.className += ' dot-pending';
+        }
+        dot.textContent = r;
+        timeline.appendChild(dot);
+      }
+    }
+
+    // ----------------------------------------------------------
+    // updateTimelineComplete
+    // ----------------------------------------------------------
+    function updateTimelineComplete() {
+      var dots = timeline.querySelectorAll('.timeline-dot');
+      var idx = currentRound - 1;
+      if (dots[idx]) {
+        dots[idx].classList.remove('dot-active');
+        dots[idx].classList.add('dot-complete');
+      }
+    }
+
+    // ----------------------------------------------------------
+    // rebuildFromState
+    // ----------------------------------------------------------
+    function rebuildFromState(state) {
+      if (!state) return;
+
+      var isIdle = !state.status || state.status === 'idle';
+
+      if (!isIdle) {
+        startBtn.disabled = true;
+        startBtn.textContent = 'BATTLE IN PROGRESS';
+        codeInputContainer.style.display = 'none';
+        codeViewerContainer.style.display = 'block';
+      }
+
+      if (state.scores) {
+        updateScores(state.scores);
+      }
+
+      if (state.total_rounds) {
+        totalRounds = state.total_rounds;
+      }
+
+      if (state.current_round && state.current_round > 0) {
+        currentRound = state.current_round;
+        updateTimeline();
+      }
+
+      // Replay round data into panels
+      if (state.rounds && state.rounds.length > 0) {
+        while (redPanel.firstChild) redPanel.removeChild(redPanel.firstChild);
+        while (bluePanel.firstChild) bluePanel.removeChild(bluePanel.firstChild);
+        state.rounds.forEach(function(round) {
+          currentRound = round.round;
+          if (round.red_attack) {
+            addRedEntry({
+              curl_cmd: round.red_attack.curl_command,
+              vuln_type: round.red_attack.vulnerability_type,
+              explanation: round.red_attack.explanation
+            });
+            updateLastRedResult({success: round.attack_success});
+          }
+          if (round.blue_patch && round.blue_patch.explanation) {
+            addBlueEntry({
+              explanation: round.blue_patch.explanation,
+              vuln_fixed: round.blue_patch.vuln_fixed || '',
+              diff: ''
+            });
+          }
+        });
+      }
+
+      // Fetch current source for viewer
+      if (!isIdle) {
+        fetch('/source')
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            if (data.source) codeViewer.textContent = data.source;
+          })
+          .catch(function() {});
+      }
+
+      if (state.status === 'complete' || state.status === 'battle_complete') {
+        statusPill.textContent = 'COMPLETE';
+        statusPill.className = 'status-pill pill-green';
+        if (state.scores) {
+          showWinner(state.scores.defended_pct || 0);
+        }
+        if (state.summary) {
+          battleSummary.textContent = state.summary;
+          overlay.classList.add('show');
+        }
+      } else if (state.status === 'running') {
+        statusPill.textContent = 'RUNNING';
+        statusPill.className = 'status-pill pill-blue';
+      }
+    }
+
+    // ----------------------------------------------------------
+    // Page Load
+    // ----------------------------------------------------------
+    window.addEventListener('DOMContentLoaded', function() {
+      loadDefaultSource();
+
+      fetch('/state')
+        .then(function(res) { return res.json(); })
+        .then(function(state) {
+          rebuildFromState(state);
+          if (state && state.status === 'running') {
+            connectSSE();
+          }
+        })
+        .catch(function(err) {
+          console.info('Could not fetch initial state:', err);
+        });
+    });
+  </script>
+
+</body>
+</html>

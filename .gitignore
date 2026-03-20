@@ -1,0 +1,5 @@
+.env
+__pycache__/
+*.pyc
+target_app/data.db
+.superpowers/
