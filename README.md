@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/banner.png" alt="Anvil — Defend What Matters" width="100%" />
+</p>
+
 # Anvil
 
 **Defend what matters.**
