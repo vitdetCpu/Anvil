@@ -271,7 +271,7 @@
           break;
 
         case 'red_thinking':
-          statusPill.textContent = 'RED THINKING';
+          statusPill.textContent = 'ATTACKER THINKING';
           statusPill.className = 'status-pill pill-red';
           showSpinner(redPanel, event.message || 'Red agent is thinking...');
           break;
@@ -283,7 +283,7 @@
 
         case 'red_generating':
           showSpinner(redPanel, event.message || 'Generating vulnerability exploit...');
-          statusPill.textContent = 'RED GENERATING';
+          statusPill.textContent = 'ATTACKER GENERATING';
           statusPill.className = 'status-pill pill-red';
           break;
 
@@ -297,7 +297,7 @@
           break;
 
         case 'blue_thinking':
-          statusPill.textContent = 'BLUE THINKING';
+          statusPill.textContent = 'DEFENDER THINKING';
           statusPill.className = 'status-pill pill-blue';
           showSpinner(bluePanel, event.message || 'Blue agent is thinking...');
           break;
@@ -309,7 +309,7 @@
 
         case 'blue_generating':
           showSpinner(bluePanel, event.message || 'Generating fix...');
-          statusPill.textContent = 'BLUE GENERATING';
+          statusPill.textContent = 'DEFENDER GENERATING';
           statusPill.className = 'status-pill pill-blue';
           break;
 
@@ -659,10 +659,10 @@
     function showWinner(hardenedPct) {
       var el = document.getElementById('winnerText');
       if (hardenedPct > 50) {
-        el.textContent = 'BLUE WINS';
+        el.textContent = 'DEFENDER WINS';
         el.style.color = 'var(--blue)';
       } else {
-        el.textContent = 'RED WINS';
+        el.textContent = 'ATTACKER WINS';
         el.style.color = 'var(--red)';
       }
     }
