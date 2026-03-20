@@ -1,4 +1,6 @@
-# Attacker vs Defender — Live App Hardening
+# Anvil
+
+**Defend what matters.**
 
 Two AI agents battle over a vulnerable Flask app in real-time. **Attacker** finds and exploits security vulnerabilities. **Defender** patches them. Watch it happen live in a dark-themed dashboard with streaming AI reasoning.
 
