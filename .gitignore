@@ -3,3 +3,7 @@ __pycache__/
 *.pyc
 target_app/data.db
 .superpowers/
+venv/
+.venv/
+*.egg-info/
+dist/
