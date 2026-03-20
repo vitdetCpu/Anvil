@@ -74,6 +74,14 @@ def start_battle():
     return jsonify({"message": "Battle started"})
 
 
+@app.route("/reset", methods=["POST"])
+def reset_battle():
+    if orchestrator.status == "running":
+        return jsonify({"error": "Battle still running"}), 409
+    orchestrator.reset()
+    return jsonify({"message": "Battle reset"})
+
+
 @app.route("/state")
 def state():
     return jsonify(orchestrator.get_state())

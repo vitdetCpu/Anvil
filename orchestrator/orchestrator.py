@@ -40,6 +40,21 @@ class BattleOrchestrator:
         self._thread.start()
         return True
 
+    def reset(self):
+        """Reset to idle state, restore original source, restart target server."""
+        if self.status == "running":
+            return False
+        self.history.clear()
+        self.scores = {"red_exploited": 0, "blue_defended": 0, "defended_pct": 0, "rounds_played": 0}
+        self.current_round = 0
+        self.broadcaster.reset()
+        if self._original_app_source:
+            self._write_app_source(self._original_app_source)
+        self.server.stop()
+        self.server.start()
+        self.status = "idle"
+        return True
+
     def get_state(self):
         """Return current state for /state endpoint."""
         return {

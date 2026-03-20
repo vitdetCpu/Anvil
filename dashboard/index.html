@@ -191,28 +191,30 @@
     // resetBattle
     // ----------------------------------------------------------
     function resetBattle() {
-      overlay.classList.remove('show');
-      codeInputContainer.style.display = 'block';
-      codeViewerContainer.style.display = 'none';
-      startBtn.disabled = false;
-      startBtn.textContent = 'START BATTLE';
-      roundPill.textContent = 'READY';
-      roundPill.className = 'status-pill pill-idle';
-      statusPill.textContent = 'IDLE';
-      statusPill.className = 'status-pill pill-idle';
-      redScore.textContent = '0';
-      blueScore.textContent = '0';
-      hardenedScore.textContent = '0';
-      document.getElementById('winnerText').textContent = '';
-      document.getElementById('viewResultsBtn').style.display = 'none';
-      var rpt = document.getElementById('battleReport');
-      while (rpt.firstChild) rpt.removeChild(rpt.firstChild);
-      while (redPanel.firstChild) redPanel.removeChild(redPanel.firstChild);
-      while (bluePanel.firstChild) bluePanel.removeChild(bluePanel.firstChild);
-      while (timeline.firstChild) timeline.removeChild(timeline.firstChild);
-      currentRound = 0;
-      if (eventSource) { eventSource.close(); eventSource = null; }
-      loadDefaultSource();
+      fetch('/reset', { method: 'POST' }).then(function() {
+        overlay.classList.remove('show');
+        codeInputContainer.style.display = 'block';
+        codeViewerContainer.style.display = 'none';
+        startBtn.disabled = false;
+        startBtn.textContent = 'START BATTLE';
+        roundPill.textContent = 'READY';
+        roundPill.className = 'status-pill pill-idle';
+        statusPill.textContent = 'IDLE';
+        statusPill.className = 'status-pill pill-idle';
+        redScore.textContent = '0';
+        blueScore.textContent = '0';
+        hardenedScore.textContent = '0';
+        document.getElementById('winnerText').textContent = '';
+        document.getElementById('viewResultsBtn').style.display = 'none';
+        var rpt = document.getElementById('battleReport');
+        while (rpt.firstChild) rpt.removeChild(rpt.firstChild);
+        while (redPanel.firstChild) redPanel.removeChild(redPanel.firstChild);
+        while (bluePanel.firstChild) bluePanel.removeChild(bluePanel.firstChild);
+        while (timeline.firstChild) timeline.removeChild(timeline.firstChild);
+        currentRound = 0;
+        if (eventSource) { eventSource.close(); eventSource = null; }
+        loadDefaultSource();
+      });
     }
 
     // ----------------------------------------------------------
