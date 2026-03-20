@@ -897,3 +897,66 @@ details[open] > .thinking-summary::before {
     font-size: 16px;
   }
 }
+
+/* ============================================================
+   Prompt Injection Overlay
+   ============================================================ */
+.injection-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(127, 29, 29, 0.95);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.injection-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+  animation: injection-flash 0.6s ease-out;
+}
+
+@keyframes injection-flash {
+  0%   { background: rgba(239, 68, 68, 1); }
+  30%  { background: rgba(127, 29, 29, 0.95); }
+  50%  { background: rgba(239, 68, 68, 0.8); }
+  100% { background: rgba(127, 29, 29, 0.95); }
+}
+
+.injection-content {
+  text-align: center;
+  padding: 40px;
+}
+
+.injection-icon {
+  font-size: 120px;
+  line-height: 1;
+  margin-bottom: 20px;
+  animation: injection-pulse 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes injection-pulse {
+  from { transform: scale(1); opacity: 0.8; }
+  to   { transform: scale(1.1); opacity: 1; }
+}
+
+.injection-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 48px;
+  font-weight: 800;
+  color: #FCA5A5;
+  letter-spacing: 4px;
+  margin: 0 0 16px 0;
+  text-shadow: 0 0 40px rgba(239, 68, 68, 0.6);
+}
+
+.injection-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  color: #FECACA;
+  margin: 0;
+}

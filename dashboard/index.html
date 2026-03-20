@@ -113,6 +113,17 @@
   </div>
 
   <!-- ============================================================
+       Prompt Injection Overlay
+       ============================================================ -->
+  <div id="injectionOverlay" class="injection-overlay">
+    <div class="injection-content">
+      <div class="injection-icon">&#9888;</div>
+      <h1 class="injection-title">PROMPT INJECTION DETECTED</h1>
+      <p class="injection-sub">Nice try. Resetting in <span id="injectionCountdown">3</span>...</p>
+    </div>
+  </div>
+
+  <!-- ============================================================
        JavaScript
        ============================================================ -->
   <script>
@@ -157,14 +168,67 @@
     }
 
     // ----------------------------------------------------------
+    // Prompt Injection Detection
+    // ----------------------------------------------------------
+    var INJECTION_PATTERNS = [
+      /ignore\s+(all\s+)?previous\s+instructions/i,
+      /ignore\s+(all\s+)?prior\s+instructions/i,
+      /ignore\s+(all\s+)?above\s+instructions/i,
+      /disregard\s+(all\s+)?previous/i,
+      /forget\s+(all\s+)?(your|previous)\s+instructions/i,
+      /you\s+are\s+now\s+/i,
+      /new\s+instructions?\s*:/i,
+      /system\s*prompt/i,
+      /act\s+as\s+(a\s+)?/i,
+      /pretend\s+(you\s+are|to\s+be)/i,
+      /do\s+not\s+follow\s+(your|the)\s+(original|previous)/i,
+      /override\s+(your\s+)?(instructions|rules|prompt)/i,
+      /jailbreak/i,
+      /DAN\s+mode/i,
+      /reveal\s+(your\s+)?(system|initial)\s+prompt/i,
+      /what\s+(is|are)\s+your\s+(instructions|rules|system\s+prompt)/i,
+    ];
+
+    function detectInjection(text) {
+      for (var i = 0; i < INJECTION_PATTERNS.length; i++) {
+        if (INJECTION_PATTERNS[i].test(text)) return true;
+      }
+      return false;
+    }
+
+    function showInjectionAlert() {
+      var ol = document.getElementById('injectionOverlay');
+      var cd = document.getElementById('injectionCountdown');
+      ol.classList.add('show');
+      var count = 3;
+      cd.textContent = count;
+      var timer = setInterval(function() {
+        count--;
+        cd.textContent = count;
+        if (count <= 0) {
+          clearInterval(timer);
+          ol.classList.remove('show');
+          startBtn.disabled = false;
+          startBtn.textContent = 'START BATTLE';
+        }
+      }, 1000);
+    }
+
+    // ----------------------------------------------------------
     // startBattle
     // ----------------------------------------------------------
     function startBattle() {
+      var code = codeInput.value.trim();
+
+      if (detectInjection(code)) {
+        showInjectionAlert();
+        return;
+      }
+
       startBtn.disabled = true;
       startBtn.textContent = 'BATTLE IN PROGRESS';
       document.getElementById('resetBtn').style.display = 'inline-block';
 
-      var code = codeInput.value.trim();
       var body = code ? JSON.stringify({ code: code }) : '{}';
 
       fetch('/start', {
