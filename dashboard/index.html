@@ -162,6 +162,7 @@
     function startBattle() {
       startBtn.disabled = true;
       startBtn.textContent = 'BATTLE IN PROGRESS';
+      document.getElementById('resetBtn').style.display = 'inline-block';
 
       var code = codeInput.value.trim();
       var body = code ? JSON.stringify({ code: code }) : '{}';
@@ -880,6 +881,7 @@
       } else if (state.status === 'running') {
         statusPill.textContent = 'RUNNING';
         statusPill.className = 'status-pill pill-blue';
+        document.getElementById('resetBtn').style.display = 'inline-block';
       }
     }
 

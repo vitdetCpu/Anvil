@@ -43,7 +43,9 @@ class BattleOrchestrator:
     def reset(self):
         """Reset to idle state, restore original source, restart target server."""
         if self.status == "running":
-            return False
+            self.status = "error"  # Signal battle loop to stop
+            if self._thread:
+                self._thread.join(timeout=5)
         self.history.clear()
         self.scores = {"red_exploited": 0, "blue_defended": 0, "defended_pct": 0, "rounds_played": 0}
         self.current_round = 0

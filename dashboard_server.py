@@ -76,8 +76,6 @@ def start_battle():
 
 @app.route("/reset", methods=["POST"])
 def reset_battle():
-    if orchestrator.status == "running":
-        return jsonify({"error": "Battle still running"}), 409
     orchestrator.reset()
     return jsonify({"message": "Battle reset"})
 
