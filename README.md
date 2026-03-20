@@ -1,6 +1,6 @@
-# Red vs Blue — Live App Hardening
+# Attacker vs Defender — Live App Hardening
 
-Two AI agents battle over a vulnerable Flask app in real-time. **Red Agent** finds and exploits security vulnerabilities. **Blue Agent** patches them. Watch it happen live in a dark-themed dashboard with streaming AI reasoning.
+Two AI agents battle over a vulnerable Flask app in real-time. **Attacker** finds and exploits security vulnerabilities. **Defender** patches them. Watch it happen live in a dark-themed dashboard with streaming AI reasoning.
 
 ![Battle Dashboard](https://img.shields.io/badge/status-battle--ready-brightgreen)
 
@@ -8,12 +8,15 @@ Two AI agents battle over a vulnerable Flask app in real-time. **Red Agent** fin
 
 1. Hit **START BATTLE** — 3 rounds begin
 2. Each round:
-   - **Red** analyzes the current source code, crafts a `curl` attack
+   - **Attacker** analyzes the current source code, crafts a `curl` attack
    - Attack executes against the live target server
-   - **Judge** determines if the attack succeeded (runs concurrently with Blue)
-   - **Blue** patches the vulnerability and the server restarts automatically
-   - If Blue's patch is invalid or crashes the server, it rolls back to the previous version
+   - **Judge** determines if the attack succeeded (runs concurrently with Defender)
+   - **Defender** patches the vulnerability and the server restarts automatically
+   - If Defender's patch is invalid or crashes the server, it rolls back to the previous version
 3. End screen shows final scores, remaining risks, and security recommendations
+4. Hit **RESTART** at any point to reset and run a fresh battle
+
+Bonus: paste a prompt injection attempt into the code input and see what happens.
 
 ## Architecture
 
@@ -24,9 +27,9 @@ Browser (vanilla JS + SSE)
     v
 Dashboard Server (Flask, :5001)
     |-- BattleOrchestrator (background thread)
-    |       |-- Red Agent  -> finds & exploits vulns
-    |       |-- Judge      -> scores attack success (concurrent with Blue)
-    |       |-- Blue Agent -> patches the code
+    |       |-- Attacker  -> finds & exploits vulns
+    |       |-- Judge     -> scores attack success (concurrent with Defender)
+    |       |-- Defender  -> patches the code
     |-- EventBroadcaster (thread-safe queue fan-out)
     |-- ServerManager (subprocess control)
             |
@@ -39,29 +42,29 @@ Target Flask App (subprocess, :5050)
 ### Round Flow
 
 ```
-Red analyzes source -> crafts curl attack
-                            |
-                    attack executed via requests
-                            |
-                +-----------+-----------+
-                |                       |
-          Judge scores             Blue patches
-          (concurrent)             (concurrent)
-                |                       |
-                +-----------+-----------+
-                            |
-                  patch validated (py_compile)
-                            |
-                  target app restarted
-                  (rollback on failure)
+Attacker analyzes source -> crafts curl attack
+                                 |
+                         attack executed via requests
+                                 |
+                     +-----------+-----------+
+                     |                       |
+               Judge scores           Defender patches
+               (concurrent)           (concurrent)
+                     |                       |
+                     +-----------+-----------+
+                                 |
+                       patch validated (py_compile)
+                                 |
+                       target app restarted
+                       (rollback on failure)
 ```
 
 ## Tech Stack
 
-- **AI**: MiniMax M2.7-highspeed via Anthropic SDK (Red/Blue with extended thinking, Judge for fast scoring)
+- **AI**: MiniMax M2.7-highspeed via Anthropic SDK (Attacker/Defender with extended thinking, Judge for fast scoring)
 - **Backend**: Python, Flask, Server-Sent Events (SSE), subprocess management
 - **Frontend**: Vanilla HTML/CSS/JS, dark OLED theme, real-time streaming
-- **Security**: Curl commands parsed (never shelled out), URL whitelisted to localhost:5050, executed via Python `requests`
+- **Security**: Curl commands parsed (never shelled out), URL whitelisted to localhost:5050, prompt injection detection on code input
 
 ## Quick Start
 
@@ -106,15 +109,16 @@ Dashboard opens at **http://localhost:5001**
 | `/` | GET | Dashboard SPA |
 | `/events` | GET | SSE event stream |
 | `/start` | POST | Begin a new battle |
+| `/reset` | POST | Stop and reset battle |
 | `/state` | GET | Full state snapshot (for reconnection) |
 | `/source` | GET | Current target app source code |
 
 ## Scoring
 
-- **Red** gets +1 for each successful exploit
-- **Blue** gets +1 for each defended attack
+- **Attacker** gets +1 for each successful exploit
+- **Defender** gets +1 for each defended attack
 - Final percentage = attacks defended / total rounds
-- \>50% defended = **Blue Wins**, <=50% = **Red Wins**
+- \>50% defended = **Defender Wins**, <=50% = **Attacker Wins**
 
 ## Environment Variables
 
